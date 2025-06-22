@@ -39,7 +39,7 @@ extract_description() {
     local branch="$1"
     local ticket="$2"
     local ticket_lower=$(echo "$ticket" | tr '[:upper:]' '[:lower:]')
-    
+
     # Remove prefixes
     local desc="$branch"
     desc="${desc#feature/}"
