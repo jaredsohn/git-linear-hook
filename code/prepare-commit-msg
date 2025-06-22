@@ -1,0 +1,111 @@
+#!/bin/zsh
+
+# Git prepare-commit-msg hook that extracts ticket info from branch names
+# Usage: Save as .git/hooks/prepare-commit-msg and make executable
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# Skip if this is an amend, merge, or rebase
+if [[ "$COMMIT_SOURCE" == "commit" ]] || [[ "$COMMIT_SOURCE" == "merge" ]]; then
+    exit 0
+fi
+
+# Get current branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [[ -z "$BRANCH_NAME" ]]; then
+    exit 0
+fi
+
+# Extract Linear ticket ID (pattern: ABC-123, DEV-456, etc.)
+TICKET_ID=$(echo "$BRANCH_NAME" | grep -oE '[A-Za-z]{2,}-[0-9]+' | head -n1)
+if [[ -z "$TICKET_ID" ]]; then
+    exit 0
+fi
+
+# Convert to uppercase
+TICKET_ID=$(echo "$TICKET_ID" | tr '[:lower:]' '[:upper:]')
+
+# Read current commit message
+CURRENT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Check if ticket ID is already in the message
+if echo "$CURRENT_MSG" | grep -q "^\[$TICKET_ID\]"; then
+    exit 0
+fi
+
+# Extract description from branch name
+extract_description() {
+    local branch="$1"
+    local ticket="$2"
+    local ticket_lower=$(echo "$ticket" | tr '[:upper:]' '[:lower:]')
+    
+    # Remove prefixes
+    local desc="$branch"
+    desc="${desc#feature/}"
+    desc="${desc#feat/}"
+    desc="${desc#bugfix/}"
+    desc="${desc#bug/}"
+    desc="${desc#hotfix/}"
+    desc="${desc#fix/}"
+    desc="${desc#chore/}"
+    
+    # Remove ticket ID
+    desc="${desc//$ticket_lower/}"
+    desc="${desc//$ticket/}"
+    
+    # Clean up separators
+    desc="${desc##[-_]}"
+    desc="${desc%%[-_]}"
+    desc="${desc//[-_]/ }"
+    
+    # Clean up spaces
+    desc="${desc//  / }"
+    desc="${desc## }"
+    desc="${desc%% }"
+    
+    # Capitalize only the first word
+    if [[ -n "$desc" ]]; then
+        # Split into words
+        local words=(${(s/ /)desc})
+        if [[ ${#words[@]} -gt 0 ]]; then
+            # Capitalize only the first word
+            words[1]=${(C)words[1]}
+            desc="${(j/ /)words}"
+        fi
+    fi
+    
+    echo "$desc"
+}
+
+# Get description from branch
+DESCRIPTION=$(extract_description "$BRANCH_NAME" "$TICKET_ID")
+
+# Create prefix
+if [[ -n "$DESCRIPTION" ]]; then
+    PREFIX="[$TICKET_ID] $DESCRIPTION"
+else
+    PREFIX="[$TICKET_ID]"
+fi
+
+# Check if current message has content (ignoring Git comments)
+HAS_CONTENT=$(echo "$CURRENT_MSG" | grep -v '^#' | grep -v '^$' | wc -l | tr -d ' ')
+
+# Write new commit message
+if [[ "$HAS_CONTENT" == "0" ]]; then
+    # Empty message - add prefix and preserve Git comments
+    {
+        echo "$PREFIX"
+        echo ""
+        echo "$CURRENT_MSG"
+    } > "$COMMIT_MSG_FILE"
+else
+    # Has content - prepend prefix with two newlines
+    {
+        echo "$PREFIX"
+        echo ""
+        echo "$CURRENT_MSG"
+    } > "$COMMIT_MSG_FILE"
+fi
+
+echo "Added: $PREFIX"
