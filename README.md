@@ -37,7 +37,7 @@ add null check
 
 1. **Download the hook:**
    ```bash
-   curl -o .git/hooks/prepare-commit-msg https://raw.githubusercontent.com/yourusername/git-linear-hook/main/prepare-commit-msg
+   curl -o .git/hooks/prepare-commit-msg https://raw.githubusercontent.com/jaredsohn/git-linear-hook/main/prepare-commit-msg
    ```
 
 2. **Make it executable:**
@@ -165,6 +165,10 @@ echo "Ticket ID: $(echo "$BRANCH_NAME" | grep -oE '[A-Za-z]{2,}-[0-9]+' | head -
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Context
+
+This was built in an afternoon with heavy use of Claude.
 
 ## License
 
