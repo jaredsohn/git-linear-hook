@@ -2,6 +2,14 @@
 
 A Git hook that automatically adds Linear ticket IDs and descriptions to your commit messages based on branch names.
 
+## Context
+
+This was built in an afternoon at [Super Happy Dev House](http://superhappydevhouse.org/) with heavy use of Claude.
+
+**Slides:** https://jaredsohn.github.io/git-linear-hook/slides.html
+
+Motivation was as a follow-up to [this Hacker News thread](https://news.ycombinator.com/item?id=44324457#44325200) for the [git-smart-squash](https://github.com/edverma/git-smart-squash) project.
+
 ## Features
 
 - **Extracts Linear ticket IDs** from branch names (e.g., `ABC-601`, `DEV-123`)
@@ -165,10 +173,6 @@ echo "Ticket ID: $(echo "$BRANCH_NAME" | grep -oE '[A-Za-z]{2,}-[0-9]+' | head -
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## Context
-
-This was built in an afternoon with heavy use of Claude.
 
 ## License
 
